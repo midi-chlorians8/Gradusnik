@@ -10,7 +10,7 @@
 // Cделать обновление экрана только при вводе нового значения +
 // Cделать 2 режима отладка (когда просто на экран сыпит цифрами, и рабочий (36.5,36.6,36.7) Температура повышена
 // Проверить работу задержки перед считыванием температуры
-// Есть баг. Когда горит красный светодиод. Мы отдаляем плавно. И начинает гореть зелёный. А может это не баг
+// Есть баг. Когда горит красный светодиод. Мы отдаляем плавно. И начинает гореть зелёный. Это баг. Надо так. При выходе из зоны повышенной температуры очистить экран на 2 сек
 
 #include <Arduino.h>
 // Датчик
@@ -43,6 +43,7 @@ bool BeginOtchet; //Для того чтоб при поднесённой ру�
 #include "CalibrDispPrint.h"
 #include "CalibrPcPrint.h"
 #include "GenerateGodRandTemp.h"
+
 void setup() {
 
   Serial.begin(9600);
@@ -67,46 +68,74 @@ void setup() {
 
 }
 
+void DrawDisplay(String abc){ // Отрисовочка дисплея
+    if(abc == "clean"){ // Если пошла команда на очистку экрана
+        // Очистить дисплей
+        Serial.println("clean");
+        tft.setCursor(81 - 75, 67 - 45); // Set position (x,y)
+        tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
+        tft.setTextSize(5);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
+        tft.println("      ");  // Print a text or value
+        tft.fillRect(0, 90, 85, 54, ST7735_BLACK);  // Draw filled rectangle (x,y,width,height,color)
+        // Очистить дисплей
+    }
+     else if(abc == "HighTemp"){
+       Serial.println("HighTemp");
+        // tft.fillScreen(ST77XX_BLACK);
+        tft.setCursor(81 - 75, 67 - 43); // Set position (x,y)
+        tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
+        tft.setTextSize(4);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
+        tft.println("H temp");  // Print a text or
+    }
+    else{ //36.5 - 36.7
+          // Вывод на экран [Рабочий] режим
+          tft.setCursor(81 - 60, 67 - 45); // Set position (x,y)
+          tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
+          tft.setTextSize(5);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
+          tft.println(abc);  // Print a text or
+          // Вывод на экран [Рабочий] режим
+    }
 
+}
 
 void LogicTemp(){ // Блок принимает решение на основе считанной температуры
    // Блок принимает решение на основе считанной температуры [Если нет ошибки]
     static bool OneRazRuka = false; // Буль нужен чтобы при подносе здоровой руки один раз выбралось одно из загатовленных значений
+    static int8_t OneRazRedRuka = 0; //  чтобы один раз картинку очистить и вывести что температура повышена
+
     if (  filter(mlx.readObjectTempC() + PotVal) > 32 && filter(mlx.readObjectTempC() + PotVal) < 37.5 ) { // Если поднесли руку и чел не горит от температуры
-      digitalWrite(GreenDiodPin,HIGH);// Засветить зелёной лампой
+        digitalWrite(GreenDiodPin,HIGH);// Засветить зелёной лампой
+        //digitalWrite(YellowDiodPin,LOW);// Погасить  жёлтую  лампу
+        digitalWrite(RedDiodPin,LOW);   // Погасить  красную лампу
 
       if (OneRazRuka == false) { // Выбрать одно из 3х случайных значений 36.6 36.7 36.8 ОДИН раз
-        GenerateGodRandTemp(); // Cоздаём случайное число
+          OneRazRedRuka = 0;
+          GenerateGodRandTemp(); // Cоздаём случайное число
 
-        // Вывод на экран [Рабочий] режим
-        char string[10];  // Create a character array of 10 characters
-        // Convert float to a string:
-        dtostrf( RandGoodResult, 3, 1, string); // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
+          char string[10];  // Create a character array of 10 characters
+          // Convert float to a string:
+          dtostrf( RandGoodResult, 3, 1, string); // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
+          DrawDisplay(string); // Вывод 36.5 -36.7  // Вывод на экран [Рабочий] режим
 
-        tft.setCursor(81 - 60, 67 - 45); // Set position (x,y)
-        tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
-        tft.setTextSize(5);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
-        tft.println(string);  // Print a text or
-        // Вывод на экран [Рабочий] режим
-
-        OneRazRuka = true;
+          OneRazRuka = true;
       }
     }
     if ( filter(mlx.readObjectTempC() + PotVal) >= 37.5 && filter(mlx.readObjectTempC() + PotVal) < 41 ) { // Если чел сгорает от температуры
       // Засветить красной лампой
       digitalWrite(RedDiodPin,HIGH); //Зажечь красный диод
+      digitalWrite(GreenDiodPin,LOW);// Засветить зелёной лампой
       // Вывести на дисплей инфу = повышена температура
               
-        // Вывод на экран [Рабочий] режим
-        //char string[10];  // Create a character array of 10 characters
-        // Convert float to a string:
-        //( RandGoodResult, 3, 1, string); // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
-
-        tft.setCursor(81 - 60, 67 - 45); // Set position (x,y)
-        tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
-        tft.setTextSize(5);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
-        tft.println("H temp");  // Print a text or
-        // Вывод на экран [Рабочий] режим
+        
+       if (OneRazRedRuka == 0) {
+          DrawDisplay("clean"); // Очистить дисплей
+          OneRazRedRuka = 1;
+       }
+          if (OneRazRedRuka == 1) {
+          DrawDisplay("HighTemp"); // Очистить дисплей
+          OneRazRedRuka = 2;
+       }
+       
         
       // Вывести на дисплей инфу = повышена температура
       // Отправить команду на PC о выводе повышенной температуры
@@ -114,21 +143,15 @@ void LogicTemp(){ // Блок принимает решение на основ�
 
     if ( filter(mlx.readObjectTempC() + PotVal) >= 10 && filter(mlx.readObjectTempC() + PotVal) <= 32 ) { //Если убрали руку
       digitalWrite(GreenDiodPin,LOW);// Погасить зелёную лампой
-      digitalWrite(RedDiodPin,LOW);
-      OneRazRuka = false;
+      digitalWrite(RedDiodPin,LOW);  // Погасить красную лампой
       
+      OneRazRuka = false;
+      OneRazRedRuka = 0;
+
       IsBeDelay = false; // Перезарядить начало задержки первоначального считывания при убранной руке
       BeginOtchet = false;
       
-      // Очистить дисплей
-      Serial.println("!");
-      tft.setCursor(81 - 60, 67 - 45); // Set position (x,y)
-      tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
-      tft.setTextSize(5);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
-      tft.println("      ");  // Print a text or value
-      tft.fillRect(0, 90, 55, 34, ST7735_BLACK);  // Draw filled rectangle (x,y,width,height,color)
-      // Очистить дисплей
-      // Очистить экран PC
+      DrawDisplay("clean"); // Очистить дисплей
     }
 
     // Блок принимает решение на основе считанной температуры [Если нет ошибки]
@@ -146,8 +169,11 @@ void loop() {
     
     //Если ошибка
     if ( ( filter(mlx.readObjectTempC() + PotVal) > -9999 && filter(mlx.readObjectTempC() + PotVal) < 0 )   || ( filter(mlx.readObjectTempC() + PotVal)>41  && filter(mlx.readObjectTempC() + PotVal) <9999 ) ) { //
-      digitalWrite(YellowDiodPin,HIGH);
-      // Засветить жёлтой лампой
+        digitalWrite(YellowDiodPin,HIGH);  // Засветить жёлтой лампой
+        digitalWrite(GreenDiodPin,LOW);// Погасить зелёную лампой
+        digitalWrite(RedDiodPin,LOW);  // Погасить красную лампой
+        DrawDisplay("clean"); // Очистить дисплей
+     
     }
     //Если ошибка
 
@@ -164,7 +190,7 @@ void loop() {
             if(IsBeDelay == false && filter(mlx.readObjectTempC() + PotVal) > 32 ){ // Если задержки ещё небыло и рука была поднесена
                if (millis() - timingDelayBetweenTempCheck > 1000){ // Вместо 10000 подставьте нужное вам значение паузы 
                   //timingDelayBetweenTempCheck = millis(); 
-                  Serial.println ("1 seconds");
+                  Serial.println ("1 seconds Delay afther Ruka");
                   IsBeDelay = true;
                }
             }        
