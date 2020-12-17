@@ -11,6 +11,10 @@
 extern Adafruit_MLX90614 mlx;
 
 void CalibrDispPrint() {          // Вывод на дисплей калибровочных данных (Исходн знач температуры + калибр значение с потенциометра)
+if(TubmblerDebugDispClean == false){ // Разок очистить дисплей
+  tft.fillScreen(ST77XX_BLACK);
+  TubmblerDebugDispClean = true;
+}
   // Если значение обновилось - разрешить вывод на экран [Калибр] режим
   if (OldValueTemp !=  filter(mlx.readObjectTempC() + PotVal)   ) {
 
