@@ -155,7 +155,7 @@ void DrawDisplay(String abc){ // Отрисовочка дисплея
         tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
         tft.setTextSize(4);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
         tft.println("H temp");  // Print a text or
-        Serial.println(String(abc));Serial.println(" ");
+        Serial.println(String(BodyTemp));Serial.println(" ");
     }
     else{ //36.5 - 36.7
           // Вывод на экран [Рабочий] режим
@@ -206,7 +206,7 @@ void LogicTemp(){ // Блок принимает решение на основ�
  
       }
     }
-    if ( BodyTemp >= 37.5 && BodyTemp < 41 ) { // Если чел сгорает от температуры
+    if ( BodyTemp >= 37.5 && BodyTemp < 40.6 ) { // Если чел сгорает от температуры
         // Засветить красной лампой
       
         digitalWrite(RedDiodPin,HIGH); // Зажечь красный диод
@@ -238,9 +238,9 @@ void LogicTemp(){ // Блок принимает решение на основ�
 }
 
 void loop() {
- // /*
+  // /*
   // put your main code here, to run repeatedly:
- // Serial.println("Ataka ");delay(500);
+  // Serial.println("Ataka ");delay(500);
     PotRead(); // Чтение потенциометра и перевод в удобные 0.1 для калибровки
   #ifdef PodstavkaTemp
   BodyTemp = InptuF;
