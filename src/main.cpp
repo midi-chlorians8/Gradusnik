@@ -1,16 +1,17 @@
-// 10.12.2020 - 17.12.2020
+// 10.12.2020 - 18.12.2020
 // Романовский И С
 // Чтение датчика MLX90614 BCC купленного в чип и дипе(Беларусь).
 
 // Df Player
 // mp3_play (1); // Температура в норме
 // mp3_play (2); // Температура повышена
-
+// mp3_play (3); // Ошибка
 // To-do
-// Есть баг. Когда горит красный светодиод. Мы отдаляем плавно. И начинает гореть зелёный. Это баг. Надо так. При выходе из зоны повышенной температуры очистить экран на 2 сек
-// Добавить. Если температура из красной зоны становится зелёной или жёлтой то погасить лампы красную и зелёную и погасить экран. -Вроде не надо по тз 
-// Cделать так чтобы не только звук от зелёного диода был, но и от красного и от жёлтого.
 
+// -Добавить. Если температура из красной зоны становится зелёной или жёлтой то погасить лампы красную и зелёную и погасить экран. -Вроде не надо по тз 
+// Cделать так чтобы не только звук от зелёного диода был, но и от красного и от жёлтого. +
+// Добавить выход под наушнички +
+// Допаять транзистор светодиоды
 
 
 #include <Arduino.h>
@@ -55,7 +56,10 @@ float BodyTemp = 0; // Температура тела (датчик + поте�
 SoftwareSerial mySerial(9, 7); // RX, TX
 // DF Player
 
+
 //#define PodstavkaTemp // Раскомментировать для отладки
+bool OneRazYellowDangerSay=false; // Чтоб только один раз воспроизвёлося звук ошибка
+#ifdef PodstavkaTemp
 String inputString = "";         // a String to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 float InptuF=0;
@@ -91,6 +95,9 @@ void serialEvent() {
   }
   
 }
+#endif
+
+#define ComputerVersion
 
 void setup() {
 
@@ -99,10 +106,10 @@ void setup() {
     // DF Player
   mySerial.begin (9600);
 	mp3_set_serial (mySerial);	//set softwareSerial for DFPlayer-mini mp3 module 
-	mp3_set_volume (20);
+	mp3_set_volume (30);
   // DF Player
   /*
-delay(500);
+  delay(500);
   mp3_play (1);
   delay(500);
   */
@@ -118,13 +125,13 @@ delay(500);
   tft.setTextWrap(false);
   tft.setFont();
   // Дисплей 0.96 st7735
-/*
+
   // Светодиоды
   pinMode(GreenDiodPin,OUTPUT);
   pinMode(YellowDiodPin,OUTPUT);
   pinMode(RedDiodPin,OUTPUT);
   // Светодиоды
-*/
+
 
 
 }
@@ -148,6 +155,7 @@ void DrawDisplay(String abc){ // Отрисовочка дисплея
         tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
         tft.setTextSize(4);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
         tft.println("H temp");  // Print a text or
+        Serial.println(String(abc));Serial.println(" ");
     }
     else{ //36.5 - 36.7
           // Вывод на экран [Рабочий] режим
@@ -155,6 +163,8 @@ void DrawDisplay(String abc){ // Отрисовочка дисплея
           tft.setTextColor(ST7735_GREEN, ST7735_BLACK);  // Set color of text. First is the color of text and after is color of background
           tft.setTextSize(5);  // Set text size. Goes from 0 (the smallest) to 20 (very big)
           tft.println(abc);  // Print a text or
+          Serial.println(String(abc));Serial.println(" ");
+          //Serial.println("Ataka");Serial.println(" ");//Serial.println(String(abc));Serial.println("Ataka");
           // Вывод на экран [Рабочий] режим
     }
 
@@ -189,7 +199,7 @@ void LogicTemp(){ // Блок принимает решение на основ�
           // Convert float to a string:
           dtostrf( RandGoodResult, 3, 1, string); // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
           DrawDisplay(string); // Вывод 36.5 -36.7  // Вывод на экран [Рабочий] режим
-          Serial.println("mp3_play (1)");
+          //!Serial.println("mp3_play (1)");
           mp3_play (1);
           //delay(500);
           OneRazRuka = true;
@@ -230,7 +240,8 @@ void LogicTemp(){ // Блок принимает решение на основ�
 void loop() {
  // /*
   // put your main code here, to run repeatedly:
-  PotRead(); // Чтение потенциометра и перевод в удобные 0.1 для калибровки
+ // Serial.println("Ataka ");delay(500);
+    PotRead(); // Чтение потенциометра и перевод в удобные 0.1 для калибровки
   #ifdef PodstavkaTemp
   BodyTemp = InptuF;
   #else
@@ -250,14 +261,19 @@ void loop() {
         digitalWrite(GreenDiodPin,LOW);// Погасить зелёную лампой
         digitalWrite(RedDiodPin,LOW);  // Погасить красную лампой
         DrawDisplay("clean"); // Очистить дисплей
+      //  Serial.println(888);
         OneRazRedRuka = 0; // Чтобы после жёлтого ошибки на экран при красном могла вывестись надпись h temp
+        if(OneRazYellowDangerSay == false){
+            mp3_play (3); // Ошибка
+            OneRazYellowDangerSay = true;
+        }
     }
     //Если ошибка
 
     // А если нет ошибки
       else{
           digitalWrite(YellowDiodPin,LOW);
-          
+          OneRazYellowDangerSay = false; // Перезарядка один раз Воспроизезвести "Ошибка"
           // Старт точка отсчёта
           if(BeginOtchet == false){ //Если не было начало отсчёта
             timingDelayBetweenTempCheck = millis(); // Присвоить текущее время
@@ -267,7 +283,7 @@ void loop() {
 
           // Если температура измеряемая датчиком говорит что рука поднесена, надо выждать секунду, а затем принимать решение что делать, если это не ситуация когда у нас ошибка
           if(IsBeDelay == false && BodyTemp > 32 ){ // Если задержки ещё небыло и рука была поднесена
-              Serial.println (F("I sees hand"));
+              //!Serial.println (F("I sees hand"));
               if (millis() - timingDelayBetweenTempCheck > 1000){ // Вместо 10000 подставьте нужное вам значение паузы 
                   //timingDelayBetweenTempCheck = millis(); 
                   //Serial.println (F("1.0 seconds Delay afther Ruka"));
