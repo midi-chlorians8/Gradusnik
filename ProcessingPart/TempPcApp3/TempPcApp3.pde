@@ -29,6 +29,11 @@ SoundFile ErrorTemp;
 float InputTemp = 36.6;
 boolean IsBeFirst = false; // Прикладывали ли руку
 boolean NewMessedge = false;
+
+// Не шуметь при отладке
+
+boolean CanSound = true; 
+// Не шуметь при отладке
 void setup() {
   size(640, 360);
 
@@ -86,8 +91,10 @@ void draw() {
       text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
       
       // Один раз воспроизвести звук
-      if(NewMessedge == true){
-          TempIsNormal.play();// delay(1500);
+      if(NewMessedge == true){   
+          if(CanSound){
+            TempIsNormal.play(); //delay(1500);
+          }
          NewMessedge = false; 
       }
       // Один раз воспроизвести звук
@@ -97,7 +104,10 @@ void draw() {
       
        // Один раз воспроизвести звук
       if(NewMessedge == true){
-          HighTemp.play();// delay(1500);
+        TempIsNormal.stop(); // Прервать другой звук если он идёт
+          if(CanSound){
+            HighTemp.play(); //delay(2200);
+          }
          NewMessedge = false; 
       }
       // Один раз воспроизвести звук
@@ -107,13 +117,30 @@ void draw() {
       
       // Один раз воспроизвести звук
       if(NewMessedge == true){
-          ErrorTemp.play();// delay(1500);
-         NewMessedge = false; 
+        TempIsNormal.stop(); // Прервать другой звук если он идёт
+        HighTemp.stop(); // Прервать другой звук если он идёт
+        if(CanSound){
+          ErrorTemp.play(); delay(1500);
+        }
+        NewMessedge = false; 
       }
       // Один раз воспроизвести звук
     }
     
   }
+   /*
+   // Cмотрит на то как часто приходят сообщенения по сериал. Если чаще чем 150 МиллиСек то это дебаг
+    if(millis()- Debugtiming < 150){
+      //println("Nay debug");
+      //Debugtiming=millis();
+      CanSound = false;
+    }
+    else{
+      CanSound = true;
+      println("No debug");
+    }
+    // Cмотрит на то как часто приходят сообщенения по сериал. Если чаще чем 150 МиллиСек то это дебаг
+    */
 }
 
 
@@ -136,29 +163,30 @@ void serialEvent(Serial thisPort) {
   if (received != null) { //удаляем пробелы
 
     received = trim(received);
-
-    /*
-    String FirstChar = received.substring(0,1);
-     print("FirstChar:"); println(FirstChar);
-     if(FirstChar == "A"){
-     println("qwer");
-     }
-     //
-     //
-     if(received.substring(0,1) == "A"){
-     print("I receive it:");  println(received.substring(0,1));
-     }
-     */
-    // */
-    //println(received.substring(0, 1));
-     println(received); //ищем нашу строку 'A' , чтобы начать рукопожатие
-
-    InputTemp=float(received);
+    print("received: ");println(received);
+    print("received.len: ");println(received.length() );
+    char c1 = received.charAt(0);
+    print("c1: ");println(c1);
+    if(c1 != 'D'){ // Если не отладка
+      InputTemp=float(received); // Преобразовать всю строку в число
+      CanSound = true; // Разрешить звуки играть
+    }
+    else{
+      CanSound = false; // Запретить звуки играть
+     // print("InputTemp: ");println(received.substring(1, (received.length()-1) ));
+       InputTemp=float(received.substring(1, (received.length()-1) ));
+    }
+    print("InputTemp:");println(InputTemp);println();
     IsBeFirst = true; //Пометка выключить заставку
     NewMessedge = true; //Подняли флаг что пришло новое сообщение
     //println("Got " + received + " from serial port " + portNumber);
-  }
+   
+
+     //
+}
   // put it in the list that holds the latest data from each port:
   // dataIn[portNumber] = received;
   // tell us who sent what:
+ 
+ 
 }
