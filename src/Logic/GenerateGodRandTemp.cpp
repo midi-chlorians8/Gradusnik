@@ -3,7 +3,8 @@
 void GenerateGodRandTemp() {
   // RandGoodResult = random(36.6, 36.8);
   // Делаем случ знач 36.5-36.7
-  int IntRandGoodResult = analogRead(A1) & 3;//random(1, 4);
+  //int IntRandGoodResult = analogRead(A1) & 3;//random(1, 4);
+  int IntRandGoodResult = random(0,4);
   switch (IntRandGoodResult ) {
     case 0:
       RandGoodResult = 36.5;

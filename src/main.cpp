@@ -140,6 +140,8 @@ void setup() {
   pinMode(RedDiodPin,OUTPUT);
   // Светодиоды
 
+   randomSeed(analogRead(A1));
+
 }
 
 void DrawDisplay(String abc){ // Отрисовочка дисплея

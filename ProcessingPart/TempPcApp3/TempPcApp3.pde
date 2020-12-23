@@ -11,6 +11,7 @@ PFont f;
 color Green = #138808;
 color Red = #45161c;
 color Yellow = #e1cc4f;
+color Black = #0a0a0a;
 // Текст, цвета фона
 
 // Приём по сериал
@@ -87,40 +88,55 @@ void draw() {
 
     fill(255); // Белый цвет шрифта
     if (InputTemp >32 && InputTemp <37.5  ) {
-      background(Green); //
-      text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
+      
       
       // Один раз воспроизвести звук
       if(NewMessedge == true){   
-          if(CanSound){
-            TempIsNormal.play(); //delay(1500);
+          if(CanSound){ // Если рабочий режим
+            background(Green); //
+            text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
+            TempIsNormal.play(); //delay(1500);            
+          }
+          else{ // Если отладка режим
+            background(Black); //
+            text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
           }
          NewMessedge = false; 
       }
       // Один раз воспроизвести звук
     } else if (InputTemp >= 37.6 && InputTemp <40.6) {
-      background(Red); //
-      text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
+     
       
        // Один раз воспроизвести звук
       if(NewMessedge == true){
         TempIsNormal.stop(); // Прервать другой звук если он идёт
           if(CanSound){
-            HighTemp.play(); //delay(2200);
+             background(Red); //
+             text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
+             HighTemp.play(); //delay(2200);
+          }
+          else{
+            background(Black);
+            text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
           }
          NewMessedge = false; 
       }
       // Один раз воспроизвести звук
     } else {
-      background(Yellow);
-      text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
+     
       
       // Один раз воспроизвести звук
       if(NewMessedge == true){
         TempIsNormal.stop(); // Прервать другой звук если он идёт
         HighTemp.stop(); // Прервать другой звук если он идёт
         if(CanSound){
-          ErrorTemp.play(); delay(1500);
+           background(Yellow);
+           text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
+           ErrorTemp.play(); delay(1500);
+        }
+        else{
+          background(Black);
+          text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
         }
         NewMessedge = false; 
       }
@@ -148,6 +164,7 @@ void draw() {
 
 void serialEvent(Serial thisPort) {
   // variable to hold the number of the port:
+  /*
   int portNumber = -1;
 
   // iterate over the list of ports opened, and match the 
@@ -157,16 +174,17 @@ void serialEvent(Serial thisPort) {
       portNumber = p;
     }
   }
+  */
   // read a byte from the port:
   // int inByte = thisPort.read();
   received = thisPort.readStringUntil(' ');
   if (received != null) { //удаляем пробелы
 
     received = trim(received);
-    print("received: ");println(received);
-    print("received.len: ");println(received.length() );
+    //print("received: ");println(received);
+    //print("received.len: ");println(received.length() );
     char c1 = received.charAt(0);
-    print("c1: ");println(c1);
+    //print("c1: ");println(c1);
     if(c1 != 'D'){ // Если не отладка
       InputTemp=float(received); // Преобразовать всю строку в число
       CanSound = true; // Разрешить звуки играть
