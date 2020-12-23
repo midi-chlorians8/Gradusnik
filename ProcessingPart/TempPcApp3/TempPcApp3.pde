@@ -36,12 +36,27 @@ void setup() {
   textFont(f);
   textAlign(CENTER, CENTER);
 
-  // Приём по сериал
+  // Приём по сериал/
+  /* Работает на моём ПК
   String portOne = Serial.list()[0];
-  String portTwo = Serial.list()[2];
+  String portTwo = Serial.list()[1];
+  String portThree = Serial.list()[2];
+  println (portOne);
   // open the ports:
   myPorts[0] = new Serial(this, portOne, 9600);
   myPorts[1] = new Serial(this, portTwo, 9600);
+  myPorts[2] = new Serial(this, portThree, 9600);
+  */ //Работает на моём ПК
+    String MyArray[]; //Cюда скопируем все ком порты что в налии
+  int Myindex; // Индекс последнего
+ printArray(Serial.list()); // Печать массива
+ MyArray = Serial.list();  // Копируем ком порты в наш массив строк
+ println(); println();
+ //println(MyArray.length);
+ Myindex = (MyArray.length)-1;
+ print("Myindex: "); println(Myindex); // Последний индекс - наше устройство
+  String portTwo = Serial.list()[Myindex];
+  myPorts[0] = new Serial(this, portTwo, 9600);
   // Приём по сериал
   
   // Первая заставочка
@@ -76,7 +91,7 @@ void draw() {
          NewMessedge = false; 
       }
       // Один раз воспроизвести звук
-    } else if (InputTemp >= 37.5 && InputTemp <40.6) {
+    } else if (InputTemp >= 37.6 && InputTemp <40.6) {
       background(Red); //
       text(nf(InputTemp, 0, 1) + "°C", width/2, height/2);
       
