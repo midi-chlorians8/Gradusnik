@@ -29,4 +29,5 @@ C ПК:
                      Если запуск НЕ успешен, пишем разработчику.
 Тестировалось на виндовс 10. Пк и ноуте.
 
+Демонстрация:
 https://www.youtube.com/watch?v=kGFmWz74bn0&ab_channel=%D0%98%D0%BB%D1%8C%D1%8F%D0%A0%D0%BE%D0%BC%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9
